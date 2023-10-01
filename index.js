@@ -3,37 +3,49 @@ const fs = require('fs')
 const express = require('express')
 const app = express()
 
-app.get('/j/82684314532', (req, res) => {
-    
-    const ip = req.ip
-    console.log(chalk.greenBright('New user connected: ') + chalk.bgRed(ip))
-    const queryArray = JSON.stringify(req.query.pwd).split(".");
-    var config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
-    var Username = 'None';
-    Object.keys(config.users).forEach((user) => {
-        if(config.users[user].Id === parseInt(queryArray[2])){
-            Username = config.users[user].Name;
-        }
-    }); 
-    var Link = 'None';
-    var LinkName = 'None';
-    Object.keys(config.links).forEach((link) => {
-        if(config.links[link].Id === parseInt(queryArray[1])){
-            Link = config.links[link].Link;
-            LinkName = config.links[link].Name;
-        }
-    }); 
-    console.log(chalk.greenBright('User name: ') + chalk.magentaBright(Username))
-    console.log(chalk.greenBright('Link: ') + chalk.magentaBright(LinkName) + '\n')
-    let CurrentDate = Date.now()
-    let DateObj = new Date(CurrentDate)
-    fs.appendFile('Logs/' + Username + '.txt', '[' + DateObj.getFullYear() + ':' + (DateObj.getMonth() + 1) + ':' + DateObj.getDate() + ']\n' + DateObj.getHours() + ':' + DateObj.getMinutes() + '\n' + 'IP: ' + ip + '\nLink Name: ' + LinkName + '\n\n', function (err) {
+// Function for save logs about user
+const logUser = (userName, userId, ip, linkName) => {
+    const dateObj = new Date(Date.now());
+    const filePath = 'Logs/' + userName + userId + '.txt';
+    const logString = '[\n' 
+                        + dateObj.getFullYear() + ':' + (dateObj.getMonth() + 1) + ':' + dateObj.getDate() + '\n' 
+                        + dateObj.getHours() + ':' + dateObj.getMinutes() + '\n' 
+                        + 'IP: ' + ip + '\nLink Name: ' + linkName + '\n'
+                        + ']\n'
+    fs.appendFile(filePath, logString, err => {
         if (err) throw err;
     });
-    res.redirect(Link)
+}
 
+app.get('/j/82684314532/:linkId/:userId', (req, res) => {
+    const {linkId, userId} = req.params;
+    const {links, users} = JSON.parse(fs.readFileSync('config.json', 'utf8'));
+    const ip = req.ip;
+
+    // Find name of a user in config
+    let userName = 'None';
+    users.forEach(user => {
+        if (user.Id === Number(userId))
+            userName = user.Name;
+    });
+
+    // Find link to redirect
+    let linkUrl = 'google.com';
+    let linkName = 'None';
+    links.forEach(link => {
+        if (link.Id === Number(linkId)){
+            linkUrl = link.Link;
+            linkName = link.Name;
+        }
+    });
+
+    // Log user
+    logUser(userName, userId, ip, linkName);
+
+    // Redirect to link
+    res.redirect(linkUrl)
 })
 
-app.listen(3000, ()=>{
+app.listen(3000, () => {
     console.log(chalk.cyan('Server started...\n'))
 })
