@@ -46,6 +46,28 @@ app.get('/j/82684314532/:linkId/:userId', (req, res) => {
     res.redirect(linkUrl)
 })
 
+app.get('/links', (req, res) => {
+    
+    // Generate links file
+    const {links, users} = JSON.parse(fs.readFileSync('config.json', 'utf8'));
+    const filePath = 'Links.txt';
+    let linksString = 'Links:\n'
+    users.forEach(user => {
+        linksString += '\n\n' + user.Name + ' (' + user.Mail + ')' + ': \n'
+        links.forEach(link => {
+            const tempArr = link.Link.split('=')
+            let queryDecoration = tempArr[1]
+            linksString += '\n' + link.Name + ': ' + req.get('host') + '/j/82684314532/' + link.Id + '/' + user.Id + '?pwd=' + queryDecoration
+        });
+    });
+    fs.writeFileSync(filePath, linksString, err => {
+        if (err) throw err;
+    });
+
+    // Download link file
+    res.download('Links.txt');
+})
+
 app.listen(3000, () => {
     console.log(chalk.cyan('Server started...\n'))
 })
