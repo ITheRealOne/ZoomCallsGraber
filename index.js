@@ -1,3 +1,5 @@
+//localhost:3000/links
+
 const chalk = require('chalk')
 const fs = require('fs')
 const express = require('express')
@@ -30,7 +32,7 @@ app.get('/j/82684314532/:linkId/:userId', (req, res) => {
     });
 
     // Find link to redirect
-    let linkUrl = 'google.com';
+    let linkUrl = 'https://zoom.us/ru';
     let linkName = 'None';
     links.forEach(link => {
         if (link.Id === Number(linkId)){
